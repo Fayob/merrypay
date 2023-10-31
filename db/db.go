@@ -16,8 +16,6 @@ func openDB(DNS string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	defer db.Close()
-
 	err = db.Ping()
 	if err != nil {
 		fmt.Println("Database Disconnected")
