@@ -86,3 +86,24 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]User, error) {
 
 	return users, err
 }
+
+type UpdateUserParams struct {
+	Username          string `json:"username"`
+	FirstName         string `json:"first_name"`
+	LastName          string `json:"last_name"`
+	Email             string `json:"email"`
+	Membership        string `json:"membership"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (string, error) {
+	query := `UPDATE users SET first_name = $1, last_name = $2, email = $3, membership = $4 
+						where username = $5`
+	
+	_, err := q.db.ExecContext(ctx, query, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.Username)
+	// var user User
+	if err != nil {
+		fmt.Println("scanning error")
+		return "", err
+	}
+	return fmt.Sprintf("%s's profile updated successfully", arg.Username), nil
+}
