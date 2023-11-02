@@ -107,3 +107,12 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (string,
 	}
 	return fmt.Sprintf("%s's profile updated successfully", arg.Username), nil
 }
+
+func (q *Queries) DeleteUser(ctx context.Context, arg string) (string, error) {
+	_, err := q.db.ExecContext(ctx, `DELETE FROM users where username = $1 or email = $1`, arg)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s deleted successfully", arg), nil
+}
