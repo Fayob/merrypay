@@ -6,16 +6,6 @@ import (
 	"time"
 )
 
-type User struct {
-	Username          string    `json:"username"`
-	FirstName         string    `json:"first_name"`
-	LastName          string    `json:"last_name"`
-	Email             string    `json:"email"`
-	Membership        string    `json:"membership"`
-	Password          string    `json:"password"`
-	UpdatedPasswordAt time.Time `json:"updated_password_at"`
-	CreatedAt         time.Time `json:"created_at"`
-}
 type CreateUserParams struct {
 	Username  string `json:"username"`
 	FirstName string `json:"first_name"`
@@ -38,7 +28,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (string,
 		return "", err
 	}
 
-	fmt.Println("User Created Successfully")
 	return "User Created Successfully", err
 }
 
@@ -100,12 +89,24 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (string,
 						where username = $5`
 	
 	_, err := q.db.ExecContext(ctx, query, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.Username)
-	// var user User
+
 	if err != nil {
 		fmt.Println("scanning error")
 		return "", err
 	}
 	return fmt.Sprintf("%s's profile updated successfully", arg.Username), nil
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, password, identifier string) (string, error) {
+	query := `UPDATE users SET password = $1, Updated_password_at = $2 where username = $3 or email = $3`
+	
+	_, err := q.db.ExecContext(ctx, query, password, time.Now(), identifier)
+
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s's password updated successfully", identifier), nil
 }
 
 func (q *Queries) DeleteUser(ctx context.Context, arg string) (string, error) {
