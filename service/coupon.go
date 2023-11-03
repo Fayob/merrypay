@@ -12,3 +12,17 @@ func (q *Queries) SaveCoupon(ctx context.Context, coupon, username string) (stri
 
 	return "Saved", nil
 }
+
+func (q *Queries) RegisterWithCoupon(ctx context.Context, coupon, username string) error {
+	query := `UPDATE coupon SET used_by = $1 where digit = $2`
+	_, err := q.db.ExecContext(ctx, query, username, coupon)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type Coupon struct {
+	UsedBy *string `json:"used_by"`
+}
