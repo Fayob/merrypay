@@ -24,10 +24,10 @@ func (q *Queries) RegisterWithCoupon(ctx context.Context, coupon, username strin
 }
 
 type Coupon struct {
-	UsedBy *string `json:"used_by"`
+	UsedBy interface{} `json:"used_by"`
 }
 
-func (q *Queries) CouponUsedBy(ctx context.Context, coupon string) (*string, error) {
+func (q *Queries) CouponUsedBy(ctx context.Context, coupon string) (interface{}, error) {
 	query := `SELECT used_by FROM coupon where digit = $1`
 	row := q.db.QueryRowContext(ctx, query, coupon)
 	var c Coupon
