@@ -26,3 +26,11 @@ type User struct {
 	UpdatedPasswordAt time.Time `json:"updated_password_at"`
 	CreatedAt         time.Time `json:"created_at"`
 }
+
+type BankDetail struct {
+	ID            int `json:"id"`
+	BankName      string `json:"bank_name"`
+	AccountName   string `json:"account_name"`
+	AccountNumber string `json:"account_number"`
+	Owner         string `json:"owner"`
+}
