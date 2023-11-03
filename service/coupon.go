@@ -26,3 +26,16 @@ func (q *Queries) RegisterWithCoupon(ctx context.Context, coupon, username strin
 type Coupon struct {
 	UsedBy *string `json:"used_by"`
 }
+
+func (q *Queries) CouponUsedBy(ctx context.Context, coupon string) (*string, error) {
+	query := `SELECT used_by FROM coupon where digit = $1`
+	row := q.db.QueryRowContext(ctx, query, coupon)
+	var c Coupon
+	if err := row.Scan(
+		&c.UsedBy,
+	); err != nil {
+		return nil, err
+	}
+
+	return c.UsedBy, nil
+}
