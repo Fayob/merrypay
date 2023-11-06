@@ -45,3 +45,12 @@ type Earning struct {
 	MediaEarning         int    `json:"media_earning"`
 	Owner                string `json:"owner"`
 }
+
+type Withdrawal struct {
+	ID          int       `json:"id"`
+	Amount      int       `json:"amount"`
+	WithdrawBy  string    `json:"withdraw_by"`
+	Status      string       `json:"status"`
+	InitiatedAt time.Time `json:"initiated_at"`
+	CompletedAt time.Time `json:"completed_at"`
+}
