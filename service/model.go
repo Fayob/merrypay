@@ -28,9 +28,20 @@ type User struct {
 }
 
 type BankDetail struct {
-	ID            int `json:"id"`
+	ID            int    `json:"id"`
 	BankName      string `json:"bank_name"`
 	AccountName   string `json:"account_name"`
 	AccountNumber string `json:"account_number"`
 	Owner         string `json:"owner"`
+	CreatedAt     string `json:"created_at"`
+}
+
+type Earning struct {
+	ID                   int    `json:"id"`
+	Referrals            int    `json:"referrals"`
+	ReferralBalance      int    `json:"referral_balance"`
+	ReferralTotalEarning int    `json:"referral_total_earning"`
+	TotalWithdrawal      int    `json:"total_withdrawal"`
+	MediaEarning         int    `json:"media_earning"`
+	Owner                string `json:"owner"`
 }
