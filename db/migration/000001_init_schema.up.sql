@@ -17,36 +17,36 @@ CREATE TABLE users (
 CREATE TABLE coupon (
   digit VARCHAR PRIMARY KEY NOT NULL,
   created_by VARCHAR REFERENCES users(username) ON DELETE CASCADE,
-  used_by VARCHAR REFERENCES users(username) ON DELETE CASCADE,
+  used_by VARCHAR UNIQUE REFERENCES users(username) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now()) 
 );
 
 CREATE TABLE bank_details (
-  id SERIAL PRIMARY KEY,
-  bank_name VARCHAR,
-  account_number INTEGER,
-  account_name VARCHAR,
-  owner VARCHAR REFERENCES users(username) ON DELETE CASCADE,
+  id SERIAL PRIMARY KEY NOT NULL,
+  bank_name VARCHAR NOT NULL,
+  account_number VARCHAR NOT NULL,
+  account_name VARCHAR NOT NULL,
+  owner VARCHAR UNIQUE REFERENCES users(username) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE withdrawal (
-  id SERIAL PRIMARY KEY,
-  amount BIGINT,
-  withdraw_by VARCHAR REFERENCES users(username) ON DELETE CASCADE,
+  id SERIAL PRIMARY KEY NOT NULL,
+  amount BIGINT NOT NULL,
+  withdraw_by VARCHAR NOT NULL REFERENCES users(username) ON DELETE CASCADE,
   status status_type DEFAULT 'pending' NOT NULL,
   initiated_at TIMESTAMPTZ NOT NULL DEFAULT (now()),
   completed_at TIMESTAMPTZ NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
 CREATE TABLE earnings (
-  id SERIAL PRIMARY KEY,
-  referrals INTEGER,
-  referral_balance BIGINT,
-  referral_total_earning BIGINT,
-  total_withdrawal BIGINT,
-  media_earning BIGINT,
-  owner VARCHAR REFERENCES users(username) ON DELETE CASCADE
+  id SERIAL PRIMARY KEY NOT NULL,
+  referrals INTEGER DEFAULT 0 NOT NULL,
+  referral_balance BIGINT DEFAULT 0 NOT NULL,
+  referral_total_earning BIGINT DEFAULT 0 NOT NULL,
+  total_withdrawal BIGINT DEFAULT 0 NOT NULL,
+  media_earning BIGINT DEFAULT 0 NOT NULL,
+  owner VARCHAR NOT NULL UNIQUE REFERENCES users(username) ON DELETE CASCADE
 );
 
 CREATE INDEX ON coupon (created_by);
