@@ -2,23 +2,14 @@ package service
 
 import (
 	"context"
-	"time"
+	"merrypay/types"
 )
 
-type Withdrawal struct {
-	ID          int       `json:"id"`
-	Amount      int       `json:"amount"`
-	WithdrawBy  string    `json:"withdraw_by"`
-	Status      string       `json:"status"`
-	InitiatedAt time.Time `json:"initiated_at"`
-	CompletedAt time.Time `json:"completed_at"`
-}
-
-func (q *Queries) InitiateWithdrawal(ctx context.Context, amount int, initiated_by string) (Withdrawal, error) {
+func (q *Queries) InitiateWithdrawal(ctx context.Context, amount int, initiated_by string) (types.Withdrawal, error) {
 	query := `INSERT INTO withdrawal(amount, withdraw_by) VALUES($1, $2) 
 						RETURNING id, amount, withdraw_by, status, initiated_at, completed_at`
 	row := q.db.QueryRowContext(ctx, query, amount, initiated_by)
-	var withdrawal Withdrawal
+	var withdrawal types.Withdrawal
 	err := row.Scan(
 		&withdrawal.ID,
 		&withdrawal.Amount,
@@ -31,11 +22,11 @@ func (q *Queries) InitiateWithdrawal(ctx context.Context, amount int, initiated_
 	return withdrawal, err
 }
 
-func (q *Queries) CompleteWithdrawal(ctx context.Context, id int) (Withdrawal, error) {
+func (q *Queries) CompleteWithdrawal(ctx context.Context, id int) (types.Withdrawal, error) {
 	query := `UPDATE withdrawal SET status = $2 where id = $1 
 						RETURNING id, amount, withdraw_by, status, initiated_at, completed_at`
 	row := q.db.QueryRowContext(ctx, query, id, "successful")
-	var withdrawal Withdrawal
+	var withdrawal types.Withdrawal
 	err := row.Scan(
 		&withdrawal.ID,
 		&withdrawal.Amount,
@@ -46,4 +37,50 @@ func (q *Queries) CompleteWithdrawal(ctx context.Context, id int) (Withdrawal, e
 	)
 
 	return withdrawal, err
+}
+
+func (q *Queries) GetWithdrawalByID(ctx context.Context, id int) (types.Withdrawal, error) {
+	query := `SELECT * FROM withdrawal where id = $1 
+						RETURNING id, amount, withdraw_by, status, initiated_at, completed_at`
+	row := q.db.QueryRowContext(ctx, query, id)
+	var withdrawal types.Withdrawal
+	err := row.Scan(
+		&withdrawal.ID,
+		&withdrawal.Amount,
+		&withdrawal.WithdrawBy,
+		&withdrawal.Status,
+		&withdrawal.InitiatedAt,
+		&withdrawal.CompletedAt,
+	)
+
+	return withdrawal, err
+}
+
+func (q *Queries) GetUserWithdrawal(ctx context.Context, username string) ([]types.Withdrawal, error) {
+	query := `SELECT id, amount, withdraw_by, status, initiated_at, completed_at FROM withdrawal
+						where withdraw_by = $1`
+
+	rows, err := q.db.QueryContext(ctx, query, username)
+	if err != nil {
+		return nil, err
+	}
+	var withdrawals []types.Withdrawal
+	for rows.Next() {
+		var withdrawal types.Withdrawal
+		err := rows.Scan(
+			&withdrawal.ID,
+			&withdrawal.Amount,
+			&withdrawal.WithdrawBy,
+			&withdrawal.Status,
+			&withdrawal.InitiatedAt,
+			&withdrawal.CompletedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		withdrawals = append(withdrawals, withdrawal)
+	}
+
+	return withdrawals, nil
 }
