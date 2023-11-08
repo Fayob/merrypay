@@ -1,6 +1,9 @@
 package service
 
-import "context"
+import (
+	"context"
+	"merrypay/types"
+)
 
 func (q *Queries) SaveCoupon(ctx context.Context, coupon, username string) (string, error) {
 	query := `INSERT INTO coupon(digit, created_by) VALUES($1, $2)`
@@ -23,19 +26,17 @@ func (q *Queries) RegisterWithCoupon(ctx context.Context, coupon, username strin
 	return nil
 }
 
-type Coupon struct {
-	UsedBy interface{} `json:"used_by"`
-}
-
-func (q *Queries) CouponUsedBy(ctx context.Context, coupon string) (interface{}, error) {
-	query := `SELECT used_by FROM coupon where digit = $1`
+func (q *Queries) GetCoupon(ctx context.Context, coupon string) (types.Coupon, error) {
+	query := `SELECT digit, used_by, created_at FROM coupon where digit = $1`
 	row := q.db.QueryRowContext(ctx, query, coupon)
-	var c Coupon
+	var c types.Coupon
 	if err := row.Scan(
+		&c.Digit,
 		&c.UsedBy,
+		&c.CreatedAt,
 	); err != nil {
-		return nil, err
+		return types.Coupon{}, err
 	}
 
-	return c.UsedBy, nil
+	return c, nil
 }
