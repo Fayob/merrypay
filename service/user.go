@@ -3,36 +3,38 @@ package service
 import (
 	"context"
 	"fmt"
+	"merrypay/types"
 	"time"
 )
 
-type CreateUserParams struct {
-	Username  string `json:"username"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-}
+func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (types.User, error) {
+	query := `INSERT INTO users(username, first_name, last_name, email, password) VALUES($1, $2, $3, $4, $5) 
+						RETURNING username, first_name, last_name, email, membership, password, updated_password_at, created_at`
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (string, error) {
-	_, err := q.db.ExecContext(ctx, `INSERT INTO users(username, first_name, last_name, email, password)
-	VALUES($1, $2, $3, $4, $5)`, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password)
-
-	if err != nil {
+	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password)
+	var user types.User
+	err := row.Scan(
+		&user.Username,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.Membership,
+		&user.Password,
+		&user.UpdatedPasswordAt,
+		&user.CreatedAt,
+	)
 		// 	if pqErr, ok := err.(*pq.Error); ok {
 		// 		if pqErr.Constraint == "users_email_key" {
 		// 			fmt.Println(pqErr.Code)
 		// 			return "", fmt.Errorf("email already in use")
 		// 		}
 		// 	}
-		return "", err
-	}
 
-	return "User Created Successfully", err
+	return user, err
 }
 
-func (q *Queries) FindUser(ctx context.Context, arg string) (User, error) {
-	var user User
+func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) {
+	var user types.User
 	query := `SELECT username, first_name, last_name, email, membership, password, updated_password_at, created_at
 						FROM users where username = $1 or email = $1`
 	res := q.db.QueryRowContext(ctx, query, arg)
@@ -49,15 +51,18 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (User, error) {
 	return user, err
 }
 
-func (q *Queries) FindAllUsers(ctx context.Context) ([]User, error) {
+func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 	query := `SELECT username, first_name, last_name, email, membership, 
 							password, updated_password_at, created_at FROM users`
 
 	rows, err := q.db.QueryContext(ctx, query)
-	var users []User
+	if err != nil {
+		return nil, err
+	}
+	var users []types.User
 
 	for rows.Next() {
-		var user User
+		var user types.User
 		if err := rows.Scan(
 			&user.Username,
 			&user.FirstName,
@@ -73,7 +78,7 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]User, error) {
 		users = append(users, user)
 	}
 
-	return users, err
+	return users, nil
 }
 
 type UpdateUserParams struct {
@@ -84,17 +89,23 @@ type UpdateUserParams struct {
 	Membership        string `json:"membership"`
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (string, error) {
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.User, error) {
 	query := `UPDATE users SET first_name = $1, last_name = $2, email = $3, membership = $4 
-						where username = $5`
+						where username = $5 RETURNING username, first_name, last_name, email, membership, created_at`
 	
-	_, err := q.db.ExecContext(ctx, query, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.Username)
+	row := q.db.QueryRowContext(ctx, query, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.Username)
 
-	if err != nil {
-		fmt.Println("scanning error")
-		return "", err
-	}
-	return fmt.Sprintf("%s's profile updated successfully", arg.Username), nil
+	var updatedUser types.User
+	err := row.Scan(
+		&updatedUser.Username,
+		&updatedUser.FirstName,
+		&updatedUser.LastName,
+		&updatedUser.Email,
+		&updatedUser.Membership,
+		&updatedUser.CreatedAt,
+	)
+
+	return updatedUser, err
 }
 
 func (q *Queries) UpdatePassword(ctx context.Context, password, identifier string) (string, error) {
