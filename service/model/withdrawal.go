@@ -22,10 +22,10 @@ func (q *Queries) InitiateWithdrawal(ctx context.Context, amount int, initiated_
 	return withdrawal, err
 }
 
-func (q *Queries) CompleteWithdrawal(ctx context.Context, id int) (types.Withdrawal, error) {
+func (q *Queries) UpdateWithdrawal(ctx context.Context, id int, status string) (types.Withdrawal, error) {
 	query := `UPDATE withdrawal SET status = $2 where id = $1 
 						RETURNING id, amount, withdraw_by, status, initiated_at, completed_at`
-	row := q.db.QueryRowContext(ctx, query, id, "successful")
+	row := q.db.QueryRowContext(ctx, query, id, status)
 	var withdrawal types.Withdrawal
 	err := row.Scan(
 		&withdrawal.ID,
