@@ -47,6 +47,14 @@ type Withdrawal struct {
 	CompletedAt time.Time `json:"completed_at"`
 }
 
+type Transaction struct {
+	ID         int       `json:"id"`
+	Amount     int       `json:"amount"`
+	Kind       string    `json:"kind"`
+	TransactBy string    `json:"transact_by"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
 type CreateUserParams struct {
 	Username  string `json:"username"`
 	FirstName string `json:"first_name"`
@@ -55,4 +63,13 @@ type CreateUserParams struct {
 	Password  string `json:"password"`
 	Coupon    string `json:"coupon"`
 	Referral  string `json:"referral"`
+}
+
+type UpdateEarningParams struct {
+	Referrals            int    `json:"referrals"`
+	ReferralBalance      int    `json:"referral_balance"`
+	ReferralTotalEarning int    `json:"referral_total_earning"`
+	TotalWithdrawal      int    `json:"total_withdrawal"`
+	MediaEarning         int    `json:"media_earning"`
+	Owner                string `json:"owner"`
 }
