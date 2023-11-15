@@ -9,7 +9,8 @@ import (
 
 func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (types.User, error) {
 	query := `INSERT INTO users(username, first_name, last_name, email, password) VALUES($1, $2, $3, $4, $5) 
-						RETURNING username, first_name, last_name, email, membership, password, updated_password_at, created_at`
+						RETURNING username, first_name, last_name, email, membership, won_jackpot, password, 
+						updated_password_at, created_at`
 
 	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password)
 	var user types.User
@@ -19,6 +20,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (t
 		&user.LastName,
 		&user.Email,
 		&user.Membership,
+		&user.WonJackpot,
 		&user.Password,
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
@@ -35,7 +37,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (t
 
 func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) {
 	var user types.User
-	query := `SELECT username, first_name, last_name, email, membership, password, updated_password_at, created_at
+	query := `SELECT username, first_name, last_name, email, membership, won_jackpot, password, updated_password_at, created_at
 						FROM users where username = $1 or email = $1`
 	res := q.db.QueryRowContext(ctx, query, arg)
 	err := res.Scan(
@@ -44,6 +46,7 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) 
 		&user.LastName,
 		&user.Email,
 		&user.Membership,
+		&user.WonJackpot,
 		&user.Password,
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
@@ -52,7 +55,7 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) 
 }
 
 func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
-	query := `SELECT username, first_name, last_name, email, membership, 
+	query := `SELECT username, first_name, last_name, email, membership, won_jackpot 
 							password, updated_password_at, created_at FROM users`
 
 	rows, err := q.db.QueryContext(ctx, query)
@@ -69,6 +72,7 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 			&user.LastName,
 			&user.Email,
 			&user.Membership,
+			&user.WonJackpot,
 			&user.Password,
 			&user.UpdatedPasswordAt,
 			&user.CreatedAt,
@@ -87,13 +91,14 @@ type UpdateUserParams struct {
 	LastName          string `json:"last_name"`
 	Email             string `json:"email"`
 	Membership        string `json:"membership"`
+	WonJackpot        string `json:"won_jackpot"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.User, error) {
-	query := `UPDATE users SET first_name = $1, last_name = $2, email = $3, membership = $4 
-						where username = $5 RETURNING username, first_name, last_name, email, membership, created_at`
+	query := `UPDATE users SET first_name = $2, last_name = $3, email = $4, membership = $5, won_jackpot = $6
+						where username = $1 RETURNING username, first_name, last_name, email, membership, won_jackpot, created_at`
 	
-	row := q.db.QueryRowContext(ctx, query, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.Username)
+	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.WonJackpot)
 
 	var updatedUser types.User
 	err := row.Scan(
@@ -102,6 +107,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.U
 		&updatedUser.LastName,
 		&updatedUser.Email,
 		&updatedUser.Membership,
+		&updatedUser.WonJackpot,
 		&updatedUser.CreatedAt,
 	)
 
