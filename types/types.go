@@ -8,6 +8,7 @@ type User struct {
 	LastName          string    `json:"last_name"`
 	Email             string    `json:"email"`
 	Membership        string    `json:"membership"`
+	WonJackpot        string    `json:"won_jackpot"`
 	Password          string    `json:"password"`
 	UpdatedPasswordAt time.Time `json:"updated_password_at"`
 	CreatedAt         time.Time `json:"created_at"`
@@ -29,19 +30,22 @@ type BankDetail struct {
 }
 
 type Earning struct {
-	ID                   int    `json:"id"`
-	Referrals            int    `json:"referrals"`
-	ReferralBalance      int    `json:"referral_balance"`
-	ReferralTotalEarning int    `json:"referral_total_earning"`
-	TotalWithdrawal      int    `json:"total_withdrawal"`
-	MediaEarning         int    `json:"media_earning"`
-	Owner                string `json:"owner"`
+	ID                      int    `json:"id"`
+	Referrals               int    `json:"referrals"`
+	ReferralBalance         int    `json:"referral_balance"`
+	ReferralTotalEarning    int    `json:"referral_total_earning"`
+	ReferralTotalWithdrawal int    `json:"referral_total_withdrawal"`
+	MediaBalance            int    `json:"media_balance"`
+	MediaTotalEarning       int    `json:"media_total_earning"`
+	MediaTotalWithdrawal    int    `json:"media_total_withdrawal"`
+	Owner                   string `json:"owner"`
 }
 
 type Withdrawal struct {
 	ID          int       `json:"id"`
 	Amount      int       `json:"amount"`
 	WithdrawBy  string    `json:"withdraw_by"`
+	Kind        string    `json:"kind"`
 	Status      string    `json:"status"`
 	InitiatedAt time.Time `json:"initiated_at"`
 	CompletedAt time.Time `json:"completed_at"`
@@ -66,10 +70,12 @@ type CreateUserParams struct {
 }
 
 type UpdateEarningParams struct {
-	Referrals            int    `json:"referrals"`
-	ReferralBalance      int    `json:"referral_balance"`
-	ReferralTotalEarning int    `json:"referral_total_earning"`
-	TotalWithdrawal      int    `json:"total_withdrawal"`
-	MediaEarning         int    `json:"media_earning"`
-	Owner                string `json:"owner"`
+	Referrals               int    `json:"referrals"`
+	ReferralBalance         int    `json:"referral_balance"`
+	ReferralTotalEarning    int    `json:"referral_total_earning"`
+	ReferralTotalWithdrawal int    `json:"referral_total_withdrawal"`
+	MediaBalance            int    `json:"media_balance"`
+	MediaTotalEarning       int    `json:"media_total_earning"`
+	MediaTotalWithdrawal    int    `json:"media_total_withdrawal"`
+	Owner                   string `json:"owner"`
 }
