@@ -22,10 +22,10 @@ type Store interface {
 	SaveBankDetails(ctx context.Context, arg service.BankDetailParams) error
 	FetchBankDetail(ctx context.Context, owner string) (types.BankDetail, error)
 	UpdateBankDetail(ctx context.Context, arg service.BankDetailParams) (types.BankDetail, error)
-	InitiateWithdrawal(ctx context.Context, amount int, initiated_by string) (types.Withdrawal, error)
+	InitiateWithdrawal(ctx context.Context, arg service.InitiateWithdrawalParams) (types.Withdrawal, error)
 	UpdateWithdrawal(ctx context.Context, id int, status string) (types.Withdrawal, error)
 	GetWithdrawalByID(ctx context.Context, id int) (types.Withdrawal, error)
-	GetUserWithdrawal(ctx context.Context, username string) ([]types.Withdrawal, error)
+	GetUserWithdrawals(ctx context.Context, username string) ([]types.Withdrawal, error)
 	CreateTransaction(ctx context.Context, arg service.CreateTransaction) error
 	GetBalanceFromTransaction(ctx context.Context, username, kind string) (service.Balance, error)
 }
