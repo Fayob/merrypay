@@ -10,6 +10,9 @@ import (
 func (s *Server) GenerateCoupon(ctx context.Context, username string) (string, error)  {
 	user, err := s.Server.FindUser(ctx, username)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("unknown user")
+		}
 		return "", err
 	}
 
