@@ -9,6 +9,7 @@ type User struct {
 	Email             string    `json:"email"`
 	Membership        string    `json:"membership"`
 	WonJackpot        string    `json:"won_jackpot"`
+	ReferredBy        string    `json:"referred_by"`
 	Password          string    `json:"password"`
 	UpdatedPasswordAt time.Time `json:"updated_password_at"`
 	CreatedAt         time.Time `json:"created_at"`
