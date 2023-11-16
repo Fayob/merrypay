@@ -8,11 +8,11 @@ import (
 )
 
 func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (types.User, error) {
-	query := `INSERT INTO users(username, first_name, last_name, email, password) VALUES($1, $2, $3, $4, $5) 
-						RETURNING username, first_name, last_name, email, membership, won_jackpot, password, 
-						updated_password_at, created_at`
+	query := `INSERT INTO users(username, first_name, last_name, email, password, referred_by) 
+						VALUES($1, $2, $3, $4, $5, $6) RETURNING username, first_name, last_name, email, membership, 
+						won_jackpot, referred_by, password, updated_password_at, created_at`
 
-	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password)
+	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password, arg.Referral)
 	var user types.User
 	err := row.Scan(
 		&user.Username,
@@ -21,6 +21,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (t
 		&user.Email,
 		&user.Membership,
 		&user.WonJackpot,
+		&user.ReferredBy,
 		&user.Password,
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
@@ -37,7 +38,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (t
 
 func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) {
 	var user types.User
-	query := `SELECT username, first_name, last_name, email, membership, won_jackpot, password, updated_password_at, created_at
+	query := `SELECT username, first_name, last_name, email, membership, won_jackpot, referred_by, password, updated_password_at, created_at
 						FROM users where username = $1 or email = $1`
 	res := q.db.QueryRowContext(ctx, query, arg)
 	err := res.Scan(
@@ -47,6 +48,7 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) 
 		&user.Email,
 		&user.Membership,
 		&user.WonJackpot,
+		&user.ReferredBy,
 		&user.Password,
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
@@ -55,8 +57,8 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) 
 }
 
 func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
-	query := `SELECT username, first_name, last_name, email, membership, won_jackpot 
-							password, updated_password_at, created_at FROM users`
+	query := `SELECT username, first_name, last_name, email, membership, won_jackpot, 
+						referred_by, password, updated_password_at, created_at FROM users`
 
 	rows, err := q.db.QueryContext(ctx, query)
 	if err != nil {
@@ -73,6 +75,7 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 			&user.Email,
 			&user.Membership,
 			&user.WonJackpot,
+			&user.ReferredBy,
 			&user.Password,
 			&user.UpdatedPasswordAt,
 			&user.CreatedAt,
@@ -96,7 +99,7 @@ type UpdateUserParams struct {
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.User, error) {
 	query := `UPDATE users SET first_name = $2, last_name = $3, email = $4, membership = $5, won_jackpot = $6
-						where username = $1 RETURNING username, first_name, last_name, email, membership, won_jackpot, created_at`
+						where username = $1 RETURNING username, first_name, last_name, email, membership, won_jackpot, referred_by, created_at`
 	
 	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.WonJackpot)
 
@@ -108,6 +111,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.U
 		&updatedUser.Email,
 		&updatedUser.Membership,
 		&updatedUser.WonJackpot,
+		&updatedUser.ReferredBy,
 		&updatedUser.CreatedAt,
 	)
 
