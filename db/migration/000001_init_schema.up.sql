@@ -11,6 +11,7 @@ CREATE TABLE users (
   membership levels DEFAULT 'member' NOT NULL,
   password VARCHAR NOT NULL,
   won_jackpot BOOLEAN DEFAULT FALSE NOT NULL,
+  referred_by VARCHAR NOT NULL,
   updated_password_at TIMESTAMPTZ NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
