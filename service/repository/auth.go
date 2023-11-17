@@ -81,6 +81,27 @@ func (s *Server) RegisterUser(ctx context.Context, arg types.CreateUserParams) (
 	return user, nil
 }
 
+func (s *Server) LogInUser(ctx context.Context, identifier, password string) (types.User, error) {
+	if identifier == "" || password == "" {
+		return types.User{}, fmt.Errorf("please fill all required fields")
+	}
+
+	user, err := s.Server.FindUser(ctx, identifier)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return types.User{}, fmt.Errorf("%v is not a registered user", identifier)
+		}
+		return types.User{}, fmt.Errorf("invalid credentials")
+	}
+
+	// Hash Password Functionality
+	if !checkHashPassword(user.Password, password) {
+		return types.User{}, fmt.Errorf("invalid credentials")
+	}
+
+	return user, nil
+}
+
 func (s *Server) checkUserByUsername(ctx context.Context, username string) error {
 	user, err := s.Server.FindUser(ctx, username)
 	if err != sql.ErrNoRows || user.Username == username {
