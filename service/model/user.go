@@ -26,12 +26,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (t
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
 	)
-		// 	if pqErr, ok := err.(*pq.Error); ok {
-		// 		if pqErr.Constraint == "users_email_key" {
-		// 			fmt.Println(pqErr.Code)
-		// 			return "", fmt.Errorf("email already in use")
-		// 		}
-		// 	}
+	// 	if pqErr, ok := err.(*pq.Error); ok {
+	// 		if pqErr.Constraint == "users_email_key" {
+	// 			fmt.Println(pqErr.Code)
+	// 			return "", fmt.Errorf("email already in use")
+	// 		}
+	// 	}
 
 	return user, err
 }
@@ -89,18 +89,18 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 }
 
 type UpdateUserParams struct {
-	Username          string `json:"username"`
-	FirstName         string `json:"first_name"`
-	LastName          string `json:"last_name"`
-	Email             string `json:"email"`
-	Membership        string `json:"membership"`
-	WonJackpot        string `json:"won_jackpot"`
+	Username   string `json:"username"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Email      string `json:"email"`
+	Membership string `json:"membership"`
+	WonJackpot string `json:"won_jackpot"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.User, error) {
 	query := `UPDATE users SET first_name = $2, last_name = $3, email = $4, membership = $5, won_jackpot = $6
 						where username = $1 RETURNING username, first_name, last_name, email, membership, won_jackpot, referred_by, created_at`
-	
+
 	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.WonJackpot)
 
 	var updatedUser types.User
@@ -120,7 +120,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.U
 
 func (q *Queries) UpdatePassword(ctx context.Context, password, identifier string) (string, error) {
 	query := `UPDATE users SET password = $1, Updated_password_at = $2 where username = $3 or email = $3`
-	
+
 	_, err := q.db.ExecContext(ctx, query, password, time.Now(), identifier)
 
 	if err != nil {
@@ -137,4 +137,35 @@ func (q *Queries) DeleteUser(ctx context.Context, arg string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s deleted successfully", arg), nil
+}
+
+type RefHisResponse struct {
+	Username  string
+	Email     string
+	FirstName string
+	LastName  string
+}
+
+func (q *Queries) ReferralHistory(ctx context.Context, username string) ([]RefHisResponse, error) {
+	query := `SELECT username, email, first_name, last_name FROM users where referred_by = $1`
+
+	rows, err := q.db.QueryContext(ctx, query, username)
+	if err != nil {
+		return nil, err
+	}
+	var referrals []RefHisResponse
+	for rows.Next() {
+		var referral RefHisResponse
+		if err := rows.Scan(
+			&referral.Username,
+			&referral.Email,
+			&referral.FirstName,
+			&referral.LastName,
+		); err != nil {
+			return nil, err
+		}
+		referrals = append(referrals, referral)
+	}
+
+	return referrals, nil
 }
