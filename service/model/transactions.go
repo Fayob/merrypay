@@ -63,3 +63,38 @@ func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string
 
 	return transactions, err
 }
+
+type Balance struct {
+	Balance         int
+	TotalEarning    int
+	TotalWithdrawal int
+}
+
+func (q *Queries) GetBalanceFromTransaction(ctx context.Context, username, kind string) (Balance, error) {
+	var balance Balance
+	totalEarningQuery := `SELECT COALESCE(SUM(amount), 0) FROM transactions where transact_by=$1 AND kind=$2 AND amount > 0`
+	totalEarning := q.db.QueryRowContext(ctx, totalEarningQuery, username, kind)
+	if err := totalEarning.Scan(
+		&balance.TotalEarning,
+	); err != nil {
+		return Balance{}, err
+	}
+
+	totalWithdrawalQuery := `SELECT COALESCE(SUM(amount), 0) FROM transactions where transact_by=$1 AND kind=$2 AND amount < 0`
+	totalWithdrawal := q.db.QueryRowContext(ctx, totalWithdrawalQuery, username, kind)
+	if err := totalWithdrawal.Scan(
+		&balance.TotalWithdrawal,
+	); err != nil {
+		return Balance{}, err
+	}
+
+	accBalanceQuery := `SELECT COALESCE(SUM(amount), 0) FROM transactions where transact_by=$1 AND kind=$2`
+	accBalance := q.db.QueryRowContext(ctx, accBalanceQuery, username, kind)
+	if err := accBalance.Scan(
+		&balance.Balance,
+	); err != nil {
+		return Balance{}, err
+	}
+
+	return balance, nil
+}
