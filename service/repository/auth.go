@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	// service "merrypay/service/model"
 	service "merrypay/service/model"
 	"merrypay/types"
 	"time"
