@@ -39,3 +39,27 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id int) (types.Transac
 
 	return transaction, err
 }
+
+func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string) ([]types.Transaction, error) {
+	query := `SELECT id, amount, kind, transact_by, created_at FROM transactions WHERE id=$1`
+	rows, err := q.db.QueryContext(ctx, query, username)
+	if err != nil {
+		return nil, err
+	}
+	var transactions []types.Transaction
+	for rows.Next() {
+		var transaction types.Transaction
+		if err = rows.Scan(
+			&transaction.ID,
+			&transaction.Amount,
+			&transaction.Kind,
+			&transaction.TransactBy,
+			&transaction.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, err
+}
