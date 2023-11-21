@@ -2,12 +2,12 @@ package repository
 
 import "merrypay/port"
 
-type Server struct {
-	Server port.Store
+type Model struct {
+	Model port.Store
 }
 
-func NewServer(server port.Store) *Server {
-	return &Server{
-		Server: server,
+func NewModel(model port.Store) *Model {
+	return &Model{
+		Model: model,
 	}
 }
