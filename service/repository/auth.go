@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (s *Server) RegisterUser(ctx context.Context, arg types.CreateUserParams) (types.User, error) {
+func (s *Model) RegisterUser(ctx context.Context, arg types.CreateUserParams) (types.User, error) {
 	if arg.Username == "" || arg.FirstName == "" || arg.LastName == "" || arg.Email == "" || arg.Password == "" || arg.Coupon == "" {
 		return types.User{}, fmt.Errorf("please fill all required fields")
 	}
@@ -41,7 +41,7 @@ func (s *Server) RegisterUser(ctx context.Context, arg types.CreateUserParams) (
 		return types.User{}, err
 	}
 
-	referralEarning, err := s.Server.GetEarning(ctx, arg.Referral)
+	referralEarning, err := s.Model.GetEarning(ctx, arg.Referral)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return types.User{}, fmt.Errorf("unknown referral")
@@ -56,17 +56,17 @@ func (s *Server) RegisterUser(ctx context.Context, arg types.CreateUserParams) (
 
 	arg.Password = hashedPassword
 	
-	user, err := s.Server.CreateUser(ctx, arg)
+	user, err := s.Model.CreateUser(ctx, arg)
 	if err != nil {
 		return types.User{}, err
 	}
 
-	err = s.Server.RegisterWithCoupon(ctx, arg.Coupon, arg.Username)
+	err = s.Model.RegisterWithCoupon(ctx, arg.Coupon, arg.Username)
 	if err != nil {
 		return types.User{}, err
 	}
 
-	err = s.Server.CreateEarning(ctx, arg.Username)
+	err = s.Model.CreateEarning(ctx, arg.Username)
 	if err != nil {
 		return types.User{}, err
 	}
@@ -80,12 +80,12 @@ func (s *Server) RegisterUser(ctx context.Context, arg types.CreateUserParams) (
 	return user, nil
 }
 
-func (s *Server) LogInUser(ctx context.Context, identifier, password string) (types.User, error) {
+func (s *Model) LogInUser(ctx context.Context, identifier, password string) (types.User, error) {
 	if identifier == "" || password == "" {
 		return types.User{}, fmt.Errorf("please fill all required fields")
 	}
 
-	user, err := s.Server.FindUser(ctx, identifier)
+	user, err := s.Model.FindUser(ctx, identifier)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return types.User{}, fmt.Errorf("%v is not a registered user", identifier)
@@ -101,8 +101,8 @@ func (s *Server) LogInUser(ctx context.Context, identifier, password string) (ty
 	return user, nil
 }
 
-func (s *Server) checkUserByUsername(ctx context.Context, username string) error {
-	user, err := s.Server.FindUser(ctx, username)
+func (s *Model) checkUserByUsername(ctx context.Context, username string) error {
+	user, err := s.Model.FindUser(ctx, username)
 	if err != sql.ErrNoRows || user.Username == username {
 		return fmt.Errorf("%v already in use", username)
 	}
@@ -110,8 +110,8 @@ func (s *Server) checkUserByUsername(ctx context.Context, username string) error
 	return nil
 }
 
-func (s *Server) checkUserByEmail(ctx context.Context, email string) error {
-	user, err := s.Server.FindUser(ctx, email)
+func (s *Model) checkUserByEmail(ctx context.Context, email string) error {
+	user, err := s.Model.FindUser(ctx, email)
 	if err != sql.ErrNoRows || user.Email == email {
 		return fmt.Errorf("%v already in use", email)
 	}
@@ -120,8 +120,8 @@ func (s *Server) checkUserByEmail(ctx context.Context, email string) error {
 }
 
 
-func (s *Server) validateCoupon(ctx context.Context, coupon string) error {
-	c, err := s.Server.GetCoupon(ctx, coupon)
+func (m *Model) validateCoupon(ctx context.Context, coupon string) error {
+	c, err := m.Model.GetCoupon(ctx, coupon)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("invalid coupon")
@@ -139,7 +139,7 @@ func (s *Server) validateCoupon(ctx context.Context, coupon string) error {
 	return nil
 }
 
-func (s *Server) updateReferralAccount(ctx context.Context, arg types.Earning) error {
+func (m *Model) updateReferralAccount(ctx context.Context, arg types.Earning) error {
 	referrals := arg.Referrals + 1
 	// referralBalance := arg.ReferralBalance + 6
 	// referralTotalBal := arg.ReferralTotalEarning + 6
@@ -150,12 +150,12 @@ func (s *Server) updateReferralAccount(ctx context.Context, arg types.Earning) e
 		Amount: 6,
 		TransactBy: arg.Owner,
 	}
-	err := s.Server.CreateTransaction(ctx, transactArg)
+	err := m.Model.CreateTransaction(ctx, transactArg)
 	if err != nil {
 		return err
 	}
 
-	bal, err := s.Server.GetBalanceFromTransaction(ctx, arg.Owner, transactArg.Kind)
+	bal, err := m.Model.GetBalanceFromTransaction(ctx, arg.Owner, transactArg.Kind)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (s *Server) updateReferralAccount(ctx context.Context, arg types.Earning) e
 		Owner: arg.Owner,
 	}
 
-	_, err = s.Server.UpdateEarning(ctx, updatedArg)
+	_, err = m.Model.UpdateEarning(ctx, updatedArg)
 	if err != nil {
 		return err
 	}
