@@ -7,8 +7,8 @@ import (
 	"math/rand"
 )
 
-func (s *Server) GenerateCoupon(ctx context.Context, username string) (string, error)  {
-	user, err := s.Server.FindUser(ctx, username)
+func (m *Model) GenerateCoupon(ctx context.Context, username string) (string, error)  {
+	user, err := m.Model.FindUser(ctx, username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", fmt.Errorf("unknown user")
@@ -22,17 +22,17 @@ func (s *Server) GenerateCoupon(ctx context.Context, username string) (string, e
 
 	coupon := coupon()
 
-	c, err := s.Server.GetCoupon(ctx, coupon)
+	c, err := m.Model.GetCoupon(ctx, coupon)
 
 	if err != sql.ErrNoRows {
 		return "", err
 	}
 
 	if c.Digit == coupon {
-		s.GenerateCoupon(ctx, username)
+		m.GenerateCoupon(ctx, username)
 	}
 
-	_, err = s.Server.SaveCoupon(ctx, coupon, username)
+	_, err = m.Model.SaveCoupon(ctx, coupon, username)
 	if err != nil {
 		return "", err
 	}
