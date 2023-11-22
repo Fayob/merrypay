@@ -45,3 +45,72 @@ func (m *Model) WithdrawFund(ctx context.Context, arg types.WithdrawalParam) (ty
 
 	return withdrawal, nil
 }
+
+// type updateWithdrawal struct {
+// 	ID int
+// 	amount int
+// 	kind string
+// 	withdrawBy string
+// }
+
+func (m *Model) CompleteWithdrawal(ctx context.Context, arg types.CompleteWithdrawalParams) error {
+	withdrawal, err := m.Model.GetWithdrawalByID(ctx, arg.ID)
+	if err != nil {
+		return err
+	}
+
+	withdrawalEarning, err := m.Model.GetEarning(ctx, withdrawal.WithdrawBy)
+	if err != nil {
+		return err
+	}
+	// withdrawalEarning.TotalWithdrawal += amount
+
+	transactArg := service.CreateTransaction{
+		Kind:       arg.Kind,
+		Amount:     -arg.Amount,
+		TransactBy: withdrawal.WithdrawBy,
+	}
+	err = m.Model.CreateTransaction(ctx, transactArg)
+	if err != nil {
+		return err
+	}
+	bal, err := m.Model.GetBalanceFromTransaction(ctx, withdrawal.WithdrawBy, arg.Kind)
+	if err != nil {
+		return err
+	}
+	var earningArg types.UpdateEarningParams
+	if arg.Kind == "referral" {
+		earningArg = types.UpdateEarningParams{
+			Referrals:               withdrawalEarning.Referrals,
+			ReferralBalance:         bal.Balance,
+			ReferralTotalWithdrawal: bal.TotalWithdrawal,
+			ReferralTotalEarning:    bal.TotalEarning,
+			Owner:                   withdrawalEarning.Owner,
+			MediaBalance:            withdrawalEarning.MediaBalance,
+			MediaTotalEarning:       withdrawalEarning.MediaTotalEarning,
+			MediaTotalWithdrawal:    withdrawalEarning.MediaTotalWithdrawal,
+		}
+	} else {
+		earningArg = types.UpdateEarningParams{
+			Referrals:               withdrawalEarning.Referrals,
+			ReferralBalance:         withdrawalEarning.ReferralBalance,
+			ReferralTotalWithdrawal: withdrawalEarning.ReferralTotalWithdrawal,
+			ReferralTotalEarning:    withdrawalEarning.ReferralTotalEarning,
+			Owner:                   withdrawalEarning.Owner,
+			MediaBalance:            bal.Balance,
+			MediaTotalEarning:       bal.TotalEarning,
+			MediaTotalWithdrawal:    bal.TotalWithdrawal,
+		}
+	}
+
+	_, err = m.Model.UpdateEarning(ctx, earningArg)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.Model.UpdateWithdrawal(ctx, arg.ID, "successful")
+	if err != nil {
+		return err
+	}
+	return nil
+}
