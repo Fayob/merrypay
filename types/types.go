@@ -8,7 +8,7 @@ type User struct {
 	LastName          string    `json:"last_name"`
 	Email             string    `json:"email"`
 	Membership        string    `json:"membership"`
-	WonJackpot        string    `json:"won_jackpot"`
+	WonJackpot        bool      `json:"won_jackpot"`
 	ReferredBy        string    `json:"referred_by"`
 	Password          string    `json:"password"`
 	UpdatedPasswordAt time.Time `json:"updated_password_at"`
@@ -61,13 +61,33 @@ type Transaction struct {
 }
 
 type CreateUserParams struct {
-	Username  string `json:"username"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Coupon    string `json:"coupon"`
-	Referral  string `json:"referral"`
+	Username  string `json:"username" binding:"required"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
+	Email     string `json:"email" binding:"required"`
+	Password  string `json:"password" binding:"required,min=6"`
+	Coupon    string `json:"coupon" binding:"required"`
+	Referral  string `json:"referral" binding:"required"`
+}
+
+type UpdateUserParams struct {
+	Username   string `json:"username" binding:"required"`
+	FirstName  string `json:"first_name" binding:"required"`
+	LastName   string `json:"last_name" binding:"required"`
+	Email      string `json:"email" binding:"required"`
+	Membership string `json:"membership" binding:"required"`
+}
+
+type MembershipUpdateParams struct {
+	AccessorUsername string `json:"accessor_username" binding:"required"`
+	AccOwnerUsername string `json:"acc_owner_username" binding:"required"`
+	Membership       string `json:"membership" binding:"required"`
+}
+
+type UpdatePasswordParams struct {
+	Username    string `json:"username" binding:"required"`
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
 }
 
 type UpdateEarningParams struct {
@@ -79,4 +99,16 @@ type UpdateEarningParams struct {
 	MediaTotalEarning       int    `json:"media_total_earning"`
 	MediaTotalWithdrawal    int    `json:"media_total_withdrawal"`
 	Owner                   string `json:"owner"`
+}
+
+type WithdrawalParam struct {
+	Kind       string `json:"kind"`
+	Amount     int    `json:"amount"`
+	WithdrawBy string `json:"withdraw_by"`
+}
+
+type CompleteWithdrawalParams struct {
+	ID     int    `json:"id"`
+	Amount int    `json:"amount"`
+	Kind   string `json:"kind"`
 }
