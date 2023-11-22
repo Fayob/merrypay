@@ -114,3 +114,34 @@ func (m *Model) CompleteWithdrawal(ctx context.Context, arg types.CompleteWithdr
 	}
 	return nil
 }
+
+func (m *Model) CancelWithdrawal(ctx context.Context, id int) error {
+	withdrawal, err := m.Model.UpdateWithdrawal(ctx, id, "failed")
+	if err != nil {
+		return err
+	}
+
+	earning, err := m.Model.GetEarning(ctx, withdrawal.WithdrawBy)
+	if err != nil {
+		return err
+	}
+
+	earning.ReferralBalance += withdrawal.Amount
+
+	arg := types.UpdateEarningParams{
+		Referrals: earning.Referrals,
+		ReferralBalance: earning.ReferralBalance,
+		ReferralTotalEarning: earning.ReferralTotalEarning,
+		ReferralTotalWithdrawal: earning.ReferralTotalWithdrawal,
+		MediaBalance: earning.MediaBalance,
+		MediaTotalEarning: earning.MediaTotalEarning,
+		MediaTotalWithdrawal: earning.MediaTotalWithdrawal,
+	}
+
+	_, err = m.Model.UpdateEarning(ctx, arg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
