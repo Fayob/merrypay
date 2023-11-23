@@ -80,3 +80,26 @@ func (m *Model) UpdateMembership(ctx context.Context, arg types.MembershipUpdate
 
 	return nil
 }
+
+func (m *Model) UpdateUserPassword(ctx context.Context, arg types.UpdatePasswordParams) error {
+	user, err := m.Model.FindUser(ctx, arg.Username)
+	if err != nil {
+		return err
+	}
+
+	if !checkHashPassword(user.Password, arg.OldPassword) {
+		return fmt.Errorf("wrong password provided")
+	}
+
+	hashedPassword, err := hashPassword(arg.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.Model.UpdatePassword(ctx, hashedPassword, arg.Username)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
