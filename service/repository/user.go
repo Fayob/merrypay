@@ -45,3 +45,38 @@ func (m *Model) UpdateUser(ctx context.Context, arg types.UpdateUserParams) erro
 
 	return nil
 }
+
+func (m *Model) UpdateMembership(ctx context.Context, arg types.MembershipUpdateParams) error {
+	if arg.AccessorUsername == "" || arg.AccOwnerUsername == "" {
+		return fmt.Errorf("all field must be filled")
+	}
+	accessorUser, err := m.Model.FindUser(ctx, arg.AccessorUsername)
+	if err != nil {
+		return err
+	}
+	if accessorUser.Membership != "admin" {
+		return fmt.Errorf("unauthorized routes")
+	}
+
+	user, err := m.Model.FindUser(ctx, arg.AccOwnerUsername)
+	if err != nil {
+		return err
+	}
+
+	user.Membership = arg.Membership
+
+	updatedArg := types.UpdateUserParams{
+		Username:   user.Username,
+		Email:      user.Email,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Membership: user.Membership,
+	}
+
+	_, err = m.Model.UpdateUser(ctx, updatedArg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
