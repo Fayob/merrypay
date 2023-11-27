@@ -28,3 +28,16 @@ func (m *Model) GetBankDetails(ctx context.Context, username string) (types.Bank
 
 	return bankDetail, nil
 }
+
+func (m *Model) UpdateBankDetail(ctx context.Context, arg types.BankDetailParams) (types.BankDetail, error) {
+	if arg.AccountName == "" || arg.AccountNumber == "" || arg.BankName == "" || arg.Owner == "" {
+		return types.BankDetail{}, fmt.Errorf("please fill all required fields")
+	}
+	
+	updatedBankDetails, err := m.Model.UpdateBankDetail(ctx, arg)
+	if err != nil {
+		return types.BankDetail{}, err
+	}
+
+	return updatedBankDetails, nil
+}
