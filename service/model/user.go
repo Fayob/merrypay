@@ -130,23 +130,16 @@ func (q *Queries) DeleteUser(ctx context.Context, arg string) (string, error) {
 	return fmt.Sprintf("%s deleted successfully", arg), nil
 }
 
-type RefHisResponse struct {
-	Username  string
-	Email     string
-	FirstName string
-	LastName  string
-}
-
-func (q *Queries) ReferralHistory(ctx context.Context, username string) ([]RefHisResponse, error) {
+func (q *Queries) ReferralHistory(ctx context.Context, username string) ([]types.RefHisResponse, error) {
 	query := `SELECT username, email, first_name, last_name FROM users where referred_by = $1`
 
 	rows, err := q.db.QueryContext(ctx, query, username)
 	if err != nil {
 		return nil, err
 	}
-	var referrals []RefHisResponse
+	var referrals []types.RefHisResponse
 	for rows.Next() {
-		var referral RefHisResponse
+		var referral types.RefHisResponse
 		if err := rows.Scan(
 			&referral.Username,
 			&referral.Email,
