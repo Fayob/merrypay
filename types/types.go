@@ -15,6 +15,13 @@ type User struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
+type RefHisResponse struct {
+	Username  string
+	Email     string
+	FirstName string
+	LastName  string
+}
+
 type Coupon struct {
 	Digit     string      `json:"digit"`
 	UsedBy    interface{} `json:"used_by"`
@@ -60,6 +67,17 @@ type Transaction struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+type UserResponse struct {
+	Username   string
+	Email      string
+	FirstName  string
+	LastName   string
+	Membership string
+	ReferredBy string
+	WonJackpot bool
+	CreatedAt  time.Time
+}
+
 type CreateUserParams struct {
 	Username  string `json:"username" binding:"required"`
 	FirstName string `json:"first_name" binding:"required"`
@@ -91,24 +109,31 @@ type UpdatePasswordParams struct {
 }
 
 type UpdateEarningParams struct {
-	Referrals               int    `json:"referrals"`
-	ReferralBalance         int    `json:"referral_balance"`
-	ReferralTotalEarning    int    `json:"referral_total_earning"`
-	ReferralTotalWithdrawal int    `json:"referral_total_withdrawal"`
-	MediaBalance            int    `json:"media_balance"`
-	MediaTotalEarning       int    `json:"media_total_earning"`
-	MediaTotalWithdrawal    int    `json:"media_total_withdrawal"`
-	Owner                   string `json:"owner"`
+	Referrals               int    `json:"referrals" binding:"required"`
+	ReferralBalance         int    `json:"referral_balance" binding:"required"`
+	ReferralTotalEarning    int    `json:"referral_total_earning" binding:"required"`
+	ReferralTotalWithdrawal int    `json:"referral_total_withdrawal" binding:"required"`
+	MediaBalance            int    `json:"media_balance" binding:"required"`
+	MediaTotalEarning       int    `json:"media_total_earning" binding:"required"`
+	MediaTotalWithdrawal    int    `json:"media_total_withdrawal" binding:"required"`
+	Owner                   string `json:"owner" binding:"required"`
 }
 
 type WithdrawalParam struct {
-	Kind       string `json:"kind"`
-	Amount     int    `json:"amount"`
-	WithdrawBy string `json:"withdraw_by"`
+	Kind       string `json:"kind" binding:"required"`
+	Amount     int    `json:"amount" binding:"required"`
+	WithdrawBy string `json:"withdraw_by" binding:"required"`
 }
 
 type CompleteWithdrawalParams struct {
-	ID     int    `json:"id"`
-	Amount int    `json:"amount"`
-	Kind   string `json:"kind"`
+	ID     int    `json:"id" binding:"required"`
+	Amount int    `json:"amount" binding:"required"`
+	Kind   string `json:"kind" binding:"required"`
+}
+
+type BankDetailParams struct {
+	BankName      string `json:"bank_name" binding:"required"`
+	AccountName   string `json:"account_name" binding:"required"`
+	AccountNumber string `json:"account_number" binding:"required"`
+	Owner         string `json:"owner"`
 }
