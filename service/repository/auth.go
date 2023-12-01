@@ -104,6 +104,7 @@ func (s *Model) LogInUser(ctx context.Context, identifier, password string) (typ
 func (s *Model) checkUserByUsername(ctx context.Context, username string) error {
 	user, err := s.Model.FindUser(ctx, username)
 	if err != sql.ErrNoRows || user.Username == username {
+		fmt.Println(err)
 		return fmt.Errorf("%v already in use", username)
 	}
 

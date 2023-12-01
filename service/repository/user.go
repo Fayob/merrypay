@@ -34,7 +34,7 @@ func (m *Model) UpdateUser(ctx context.Context, arg types.UpdateUserParams) erro
 		_, err := m.Model.FindUser(ctx, arg.Email)
 		if err != sql.ErrNoRows {
 			fmt.Println(err)
-			return fmt.Errorf("email already in use please choose another email address")
+			return fmt.Errorf("email already in use kindly choose another email address")
 		}
 	}
 
@@ -102,4 +102,27 @@ func (m *Model) UpdateUserPassword(ctx context.Context, arg types.UpdatePassword
 	}
 
 	return nil
+}
+
+func (m *Model) DeleteUser(ctx context.Context, username string) error {
+	if username == "" {
+		return fmt.Errorf("please fill all required fields")
+	}
+
+	_, err := m.Model.DeleteUser(ctx, username)
+
+	return err
+}
+
+func (m *Model) UserReferred(ctx context.Context, username string) ([]types.RefHisResponse, error) {
+	if username == "" {
+		return nil, fmt.Errorf("please fill all required fields")
+	}
+
+	userReferred, err := m.Model.ReferralHistory(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	return userReferred, nil
 }

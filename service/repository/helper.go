@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,6 +19,7 @@ func hashPassword(password string) (string, error) {
 		return "", err
 	}
 
+	fmt.Println(hashedPassword)
 	return string(hashedPassword), nil
 }
 
