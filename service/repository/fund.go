@@ -145,3 +145,12 @@ func (m *Model) CancelWithdrawal(ctx context.Context, id int) error {
 
 	return nil
 }
+
+func (m *Model) GetWithdrawReceiptByID(ctx context.Context, id int) (types.Withdrawal, error) {
+	withdrawal, err := m.Model.GetWithdrawalByID(ctx, id)
+	if err != nil {
+		return types.Withdrawal{}, err
+	}
+
+	return withdrawal, nil
+}
