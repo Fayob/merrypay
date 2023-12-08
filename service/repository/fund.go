@@ -5,6 +5,7 @@ import (
 	"fmt"
 	service "merrypay/service/model"
 	"merrypay/types"
+	"strings"
 )
 
 func (m *Model) WithdrawFund(ctx context.Context, arg types.WithdrawalParam) (types.Withdrawal, error) {
@@ -54,6 +55,7 @@ func (m *Model) WithdrawFund(ctx context.Context, arg types.WithdrawalParam) (ty
 // }
 
 func (m *Model) CompleteWithdrawal(ctx context.Context, arg types.CompleteWithdrawalParams) error {
+	arg.Kind = strings.ToLower(arg.Kind)
 	withdrawal, err := m.Model.GetWithdrawalByID(ctx, arg.ID)
 	if err != nil {
 		return err

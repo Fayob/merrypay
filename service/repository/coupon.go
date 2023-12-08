@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"strings"
 )
 
 func (m *Model) GenerateCoupon(ctx context.Context, username string) (string, error)  {
+	username = strings.ToLower(username)
 	user, err := m.Model.FindUser(ctx, username)
 	if err != nil {
 		if err == sql.ErrNoRows {

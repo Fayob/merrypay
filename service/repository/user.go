@@ -5,12 +5,15 @@ import (
 	"database/sql"
 	"fmt"
 	"merrypay/types"
+	"strings"
 )
 
 func (m *Model) GetUser(ctx context.Context, username string) (types.User, error) {
 	if username == "" {
 		return types.User{}, fmt.Errorf("username cannot be empty")
 	}
+
+	username = strings.ToLower(username)
 
 	user, err := m.Model.FindUser(ctx, username)
 	if err != nil {
@@ -24,6 +27,9 @@ func (m *Model) UpdateUser(ctx context.Context, arg types.UpdateUserParams) erro
 	if arg.Username == "" || arg.Email == "" || arg.FirstName == "" || arg.LastName == "" {
 		return fmt.Errorf("all field must be filled")
 	}
+
+	arg.Username = strings.ToLower(arg.Username)
+	arg.Email = strings.ToLower(arg.Email)
 
 	user, err := m.Model.FindUser(ctx, arg.Username)
 	if err != nil {
@@ -50,6 +56,10 @@ func (m *Model) UpdateMembership(ctx context.Context, arg types.MembershipUpdate
 	if arg.AccessorUsername == "" || arg.AccOwnerUsername == "" {
 		return fmt.Errorf("all field must be filled")
 	}
+
+	arg.AccOwnerUsername = strings.ToLower(arg.AccOwnerUsername)
+	arg.AccessorUsername = strings.ToLower(arg.AccessorUsername)
+
 	accessorUser, err := m.Model.FindUser(ctx, arg.AccessorUsername)
 	if err != nil {
 		return err
@@ -82,6 +92,8 @@ func (m *Model) UpdateMembership(ctx context.Context, arg types.MembershipUpdate
 }
 
 func (m *Model) UpdateUserPassword(ctx context.Context, arg types.UpdatePasswordParams) error {
+	arg.Username = strings.ToLower(arg.Username)
+
 	user, err := m.Model.FindUser(ctx, arg.Username)
 	if err != nil {
 		return err
@@ -109,6 +121,8 @@ func (m *Model) DeleteUser(ctx context.Context, username string) error {
 		return fmt.Errorf("please fill all required fields")
 	}
 
+	username = strings.ToLower(username)
+
 	_, err := m.Model.DeleteUser(ctx, username)
 
 	return err
@@ -118,6 +132,8 @@ func (m *Model) UserReferred(ctx context.Context, username string) ([]types.RefH
 	if username == "" {
 		return nil, fmt.Errorf("please fill all required fields")
 	}
+
+	username = strings.ToLower(username)
 
 	userReferred, err := m.Model.ReferralHistory(ctx, username)
 	if err != nil {

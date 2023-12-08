@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	service "merrypay/service/model"
 	"merrypay/types"
@@ -18,6 +19,9 @@ func (s *Model) RegisterUser(ctx context.Context, arg types.CreateUserParams) (t
 	if arg.Referral == "" {
 		return types.User{}, fmt.Errorf("no referral found, please kindly contact admin to get a referral")
 	}
+
+	arg.Username = strings.ToLower(arg.Username)
+	arg.Email = strings.ToLower(arg.Email)
 
 	if err := s.checkUserByUsername(ctx, arg.Username); err != nil {
 		return types.User{}, err
@@ -66,14 +70,18 @@ func (s *Model) RegisterUser(ctx context.Context, arg types.CreateUserParams) (t
 		return types.User{}, err
 	}
 
-	err = s.Model.CreateEarning(ctx, arg.Username)
+	userEarning, err := s.Model.CreateEarning(ctx, arg.Username)
 	if err != nil {
 		return types.User{}, err
 	}
 	
 	// create Transaction
 
-	if err := s.updateReferralAccount(ctx, referralEarning); err != nil {
+	if err := s.updateUserAccount(ctx, "referral", referralEarning); err != nil {
+		return types.User{}, err
+	}
+
+	if err := s.updateUserAccount(ctx, "media", userEarning); err != nil {
 		return types.User{}, err
 	}
 
@@ -84,6 +92,8 @@ func (s *Model) LogInUser(ctx context.Context, identifier, password string) (typ
 	if identifier == "" || password == "" {
 		return types.User{}, fmt.Errorf("please fill all required fields")
 	}
+
+	identifier = strings.ToLower(identifier)
 
 	user, err := s.Model.FindUser(ctx, identifier)
 	if err != nil {
@@ -140,14 +150,14 @@ func (m *Model) validateCoupon(ctx context.Context, coupon string) error {
 	return nil
 }
 
-func (m *Model) updateReferralAccount(ctx context.Context, arg types.Earning) error {
+func (m *Model) updateUserAccount(ctx context.Context, kind string, arg types.Earning) error {
 	referrals := arg.Referrals + 1
 	// referralBalance := arg.ReferralBalance + 6
 	// referralTotalBal := arg.ReferralTotalEarning + 6
 
 	// Create Transaction
 	transactArg := service.CreateTransaction{
-		Kind: "referral",
+		Kind: kind,
 		Amount: 6,
 		TransactBy: arg.Owner,
 	}
@@ -161,15 +171,31 @@ func (m *Model) updateReferralAccount(ctx context.Context, arg types.Earning) er
 		return err
 	}
 
-	updatedArg := types.UpdateEarningParams{
-		Referrals: referrals,
-		ReferralBalance: bal.Balance,
-		ReferralTotalEarning: bal.TotalEarning,
-		ReferralTotalWithdrawal: bal.TotalWithdrawal,
-		MediaBalance: arg.MediaBalance,
-		MediaTotalEarning: arg.MediaTotalEarning,
-		MediaTotalWithdrawal: arg.MediaTotalWithdrawal,
-		Owner: arg.Owner,
+	var updatedArg types.UpdateEarningParams
+	if kind == "" {
+		return fmt.Errorf("kind parameter should not be empty")
+	} else if kind == "referral" {
+		updatedArg = types.UpdateEarningParams{
+			Referrals: referrals,
+			ReferralBalance: bal.Balance,
+			ReferralTotalEarning: bal.TotalEarning,
+			ReferralTotalWithdrawal: bal.TotalWithdrawal,
+			MediaBalance: arg.MediaBalance,
+			MediaTotalEarning: arg.MediaTotalEarning,
+			MediaTotalWithdrawal: arg.MediaTotalWithdrawal,
+			Owner: arg.Owner,
+		}
+		} else {
+		updatedArg = types.UpdateEarningParams{
+			Referrals: arg.Referrals,
+			ReferralBalance: arg.ReferralBalance,
+			ReferralTotalEarning: arg.ReferralTotalEarning,
+			ReferralTotalWithdrawal: arg.ReferralTotalWithdrawal,
+			MediaBalance: bal.Balance,
+			MediaTotalEarning: bal.TotalEarning,
+			MediaTotalWithdrawal: bal.TotalWithdrawal,
+			Owner: arg.Owner,
+		}
 	}
 
 	_, err = m.Model.UpdateEarning(ctx, updatedArg)
