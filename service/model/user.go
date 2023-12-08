@@ -8,10 +8,11 @@ import (
 )
 
 func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (types.User, error) {
-	query := `INSERT INTO users(username, first_name, last_name, email, password) VALUES($1, $2, $3, $4, $5) 
-						RETURNING username, first_name, last_name, email, membership, password, updated_password_at, created_at`
+	query := `INSERT INTO users(username, first_name, last_name, email, password, referred_by) 
+						VALUES($1, $2, $3, $4, $5, $6) RETURNING username, first_name, last_name, email, membership, 
+						won_jackpot, referred_by, password, updated_password_at, created_at`
 
-	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password)
+	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Password, arg.Referral)
 	var user types.User
 	err := row.Scan(
 		&user.Username,
@@ -19,23 +20,25 @@ func (q *Queries) CreateUser(ctx context.Context, arg types.CreateUserParams) (t
 		&user.LastName,
 		&user.Email,
 		&user.Membership,
+		&user.WonJackpot,
+		&user.ReferredBy,
 		&user.Password,
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
 	)
-		// 	if pqErr, ok := err.(*pq.Error); ok {
-		// 		if pqErr.Constraint == "users_email_key" {
-		// 			fmt.Println(pqErr.Code)
-		// 			return "", fmt.Errorf("email already in use")
-		// 		}
-		// 	}
+	// 	if pqErr, ok := err.(*pq.Error); ok {
+	// 		if pqErr.Constraint == "users_email_key" {
+	// 			fmt.Println(pqErr.Code)
+	// 			return "", fmt.Errorf("email already in use")
+	// 		}
+	// 	}
 
 	return user, err
 }
 
 func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) {
 	var user types.User
-	query := `SELECT username, first_name, last_name, email, membership, password, updated_password_at, created_at
+	query := `SELECT username, first_name, last_name, email, membership, won_jackpot, referred_by, password, updated_password_at, created_at
 						FROM users where username = $1 or email = $1`
 	res := q.db.QueryRowContext(ctx, query, arg)
 	err := res.Scan(
@@ -44,6 +47,8 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) 
 		&user.LastName,
 		&user.Email,
 		&user.Membership,
+		&user.WonJackpot,
+		&user.ReferredBy,
 		&user.Password,
 		&user.UpdatedPasswordAt,
 		&user.CreatedAt,
@@ -52,8 +57,8 @@ func (q *Queries) FindUser(ctx context.Context, arg string) (types.User, error) 
 }
 
 func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
-	query := `SELECT username, first_name, last_name, email, membership, 
-							password, updated_password_at, created_at FROM users`
+	query := `SELECT username, first_name, last_name, email, membership, won_jackpot, 
+						referred_by, password, updated_password_at, created_at FROM users`
 
 	rows, err := q.db.QueryContext(ctx, query)
 	if err != nil {
@@ -69,6 +74,8 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 			&user.LastName,
 			&user.Email,
 			&user.Membership,
+			&user.WonJackpot,
+			&user.ReferredBy,
 			&user.Password,
 			&user.UpdatedPasswordAt,
 			&user.CreatedAt,
@@ -81,19 +88,11 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 	return users, nil
 }
 
-type UpdateUserParams struct {
-	Username          string `json:"username"`
-	FirstName         string `json:"first_name"`
-	LastName          string `json:"last_name"`
-	Email             string `json:"email"`
-	Membership        string `json:"membership"`
-}
+func (q *Queries) UpdateUser(ctx context.Context, arg types.UpdateUserParams) (types.User, error) {
+	query := `UPDATE users SET first_name = $2, last_name = $3, email = $4, membership = $5 where username = $1 
+						RETURNING username, first_name, last_name, email, membership, won_jackpot, referred_by, created_at`
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.User, error) {
-	query := `UPDATE users SET first_name = $1, last_name = $2, email = $3, membership = $4 
-						where username = $5 RETURNING username, first_name, last_name, email, membership, created_at`
-	
-	row := q.db.QueryRowContext(ctx, query, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.Username)
+	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Membership)
 
 	var updatedUser types.User
 	err := row.Scan(
@@ -102,6 +101,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.U
 		&updatedUser.LastName,
 		&updatedUser.Email,
 		&updatedUser.Membership,
+		&updatedUser.WonJackpot,
+		&updatedUser.ReferredBy,
 		&updatedUser.CreatedAt,
 	)
 
@@ -110,7 +111,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (types.U
 
 func (q *Queries) UpdatePassword(ctx context.Context, password, identifier string) (string, error) {
 	query := `UPDATE users SET password = $1, Updated_password_at = $2 where username = $3 or email = $3`
-	
+
 	_, err := q.db.ExecContext(ctx, query, password, time.Now(), identifier)
 
 	if err != nil {
@@ -127,4 +128,28 @@ func (q *Queries) DeleteUser(ctx context.Context, arg string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s deleted successfully", arg), nil
+}
+
+func (q *Queries) ReferralHistory(ctx context.Context, username string) ([]types.RefHisResponse, error) {
+	query := `SELECT username, email, first_name, last_name FROM users where referred_by = $1`
+
+	rows, err := q.db.QueryContext(ctx, query, username)
+	if err != nil {
+		return nil, err
+	}
+	var referrals []types.RefHisResponse
+	for rows.Next() {
+		var referral types.RefHisResponse
+		if err := rows.Scan(
+			&referral.Username,
+			&referral.Email,
+			&referral.FirstName,
+			&referral.LastName,
+		); err != nil {
+			return nil, err
+		}
+		referrals = append(referrals, referral)
+	}
+
+	return referrals, nil
 }

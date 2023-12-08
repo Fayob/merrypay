@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"merrypay/service"
+	"merrypay/service/model"
 	"merrypay/types"
 )
 
@@ -18,14 +18,16 @@ type Store interface {
 	GetCoupon(context.Context, string) (types.Coupon, error)
 	CreateEarning(ctx context.Context, owner string) error
 	GetEarning(ctx context.Context, owner string) (types.Earning, error)
-	UpdateEarning(ctx context.Context, arg service.UpdateEarningParams) (types.Earning, error)
-	SaveBankDetails(context.Context, service.BankDetailParams) error
-	FetchBankDetail(context.Context, string) (types.BankDetail, error)
-	UpdateBankDetail(context.Context, service.BankDetailParams) (types.BankDetail, error)
-	InitiateWithdrawal(context.Context, int, string) (types.Withdrawal, error)
-	CompleteWithdrawal(context.Context, int) (types.Withdrawal, error)
+	UpdateEarning(ctx context.Context, arg types.UpdateEarningParams) (types.Earning, error)
+	SaveBankDetails(ctx context.Context, arg service.BankDetailParams) error
+	FetchBankDetail(ctx context.Context, owner string) (types.BankDetail, error)
+	UpdateBankDetail(ctx context.Context, arg service.BankDetailParams) (types.BankDetail, error)
+	InitiateWithdrawal(ctx context.Context, arg service.InitiateWithdrawalParams) (types.Withdrawal, error)
+	UpdateWithdrawal(ctx context.Context, id int, status string) (types.Withdrawal, error)
 	GetWithdrawalByID(ctx context.Context, id int) (types.Withdrawal, error)
-	GetUserWithdrawal(ctx context.Context, username string) ([]types.Withdrawal, error)
+	GetUserWithdrawals(ctx context.Context, username string) ([]types.Withdrawal, error)
+	CreateTransaction(ctx context.Context, arg service.CreateTransaction) error
+	GetBalanceFromTransaction(ctx context.Context, username, kind string) (service.Balance, error)
 }
 
 type Handler interface {

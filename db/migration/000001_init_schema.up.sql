@@ -10,6 +10,8 @@ CREATE TABLE users (
   email VARCHAR UNIQUE NOT NULL,
   membership levels DEFAULT 'member' NOT NULL,
   password VARCHAR NOT NULL,
+  won_jackpot BOOLEAN DEFAULT FALSE NOT NULL,
+  referred_by VARCHAR NOT NULL,
   updated_password_at TIMESTAMPTZ NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   created_at TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
@@ -33,8 +35,9 @@ CREATE TABLE bank_details (
 CREATE TABLE withdrawal (
   id SERIAL PRIMARY KEY NOT NULL,
   amount BIGINT NOT NULL,
-  withdraw_by VARCHAR NOT NULL REFERENCES users(username) ON DELETE CASCADE,
   status status_type DEFAULT 'pending' NOT NULL,
+  kind VARCHAR NOT NULL,
+  withdraw_by VARCHAR NOT NULL REFERENCES users(username) ON DELETE CASCADE,
   initiated_at TIMESTAMPTZ NOT NULL DEFAULT (now()),
   completed_at TIMESTAMPTZ NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -44,9 +47,19 @@ CREATE TABLE earnings (
   referrals INTEGER DEFAULT 0 NOT NULL,
   referral_balance BIGINT DEFAULT 0 NOT NULL,
   referral_total_earning BIGINT DEFAULT 0 NOT NULL,
-  total_withdrawal BIGINT DEFAULT 0 NOT NULL,
-  media_earning BIGINT DEFAULT 0 NOT NULL,
+  referral_total_withdrawal BIGINT DEFAULT 0 NOT NULL,
+  media_balance BIGINT DEFAULT 0 NOT NULL,
+  media_total_earning BIGINT DEFAULT 0 NOT NULL,
+  media_total_withdrawal BIGINT DEFAULT 0 NOT NULL,
   owner VARCHAR NOT NULL UNIQUE REFERENCES users(username) ON DELETE CASCADE
+);
+
+CREATE TABLE transactions (
+  id SERIAL PRIMARY KEY NOT NULL,
+  kind VARCHAR NOT NULL,
+  amount BIGINT DEFAULT 0 NOT NULL,
+  transact_by VARCHAR NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT(now())
 );
 
 CREATE INDEX ON coupon (created_by);
@@ -54,3 +67,4 @@ CREATE INDEX ON coupon (used_by);
 CREATE INDEX ON bank_details (owner);
 CREATE INDEX ON withdrawal (withdraw_by);
 CREATE INDEX ON earnings (owner);
+CREATE INDEX ON transactions (transact_by);
