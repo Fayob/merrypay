@@ -48,8 +48,9 @@ func (q *Queries) UpdateWithdrawal(ctx context.Context, id int, status string) (
 }
 
 func (q *Queries) GetWithdrawalByID(ctx context.Context, id int) (types.Withdrawal, error) {
-	query := `SELECT * FROM withdrawal where id = $1 
-						RETURNING id, amount, withdraw_by, kind, status, initiated_at, completed_at`
+	query := `SELECT id, amount, withdraw_by, kind, status, initiated_at, completed_at
+						FROM withdrawal where id = $1`
+
 	row := q.db.QueryRowContext(ctx, query, id)
 	var withdrawal types.Withdrawal
 	err := row.Scan(

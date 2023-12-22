@@ -13,11 +13,19 @@ func (m *Model) WithdrawFund(ctx context.Context, arg types.WithdrawalParam) (ty
 	if err != nil {
 		return types.Withdrawal{}, err
 	}
-	if withdrawalEarnings.ReferralBalance < arg.Amount {
-		return types.Withdrawal{}, fmt.Errorf("insufficient fund")
+
+	if arg.Kind == "referral" {
+		if withdrawalEarnings.ReferralBalance < arg.Amount {
+			return types.Withdrawal{}, fmt.Errorf("insufficient fund")
+		}
+		withdrawalEarnings.ReferralBalance -= arg.Amount
+	} else {
+		if withdrawalEarnings.MediaBalance < arg.Amount {
+			return types.Withdrawal{}, fmt.Errorf("insufficient fund")
+		}
+		withdrawalEarnings.MediaBalance -= arg.Amount
 	}
 
-	withdrawalEarnings.ReferralBalance -= arg.Amount
 	updateArg := types.UpdateEarningParams{
 		Referrals:               withdrawalEarnings.Referrals,
 		ReferralBalance:         withdrawalEarnings.ReferralBalance,
@@ -72,16 +80,29 @@ func (m *Model) CompleteWithdrawal(ctx context.Context, arg types.CompleteWithdr
 		Amount:     -arg.Amount,
 		TransactBy: withdrawal.WithdrawBy,
 	}
-	err = m.Model.CreateTransaction(ctx, transactArg)
+	
+	err = m.transactHelperFunc(ctx, transactArg, withdrawalEarning)
 	if err != nil {
 		return err
 	}
-	bal, err := m.Model.GetBalanceFromTransaction(ctx, withdrawal.WithdrawBy, arg.Kind)
+	_, err = m.Model.UpdateWithdrawal(ctx, arg.ID, "successful")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Model) transactHelperFunc(ctx context.Context, transactArg service.CreateTransaction, withdrawalEarning types.Earning) error {
+	err := m.Model.CreateTransaction(ctx, transactArg)
+	if err != nil {
+		return err
+	}
+	bal, err := m.Model.GetBalanceFromTransaction(ctx, transactArg.TransactBy, transactArg.Kind)
 	if err != nil {
 		return err
 	}
 	var earningArg types.UpdateEarningParams
-	if arg.Kind == "referral" {
+	if transactArg.Kind == "referral" {
 		earningArg = types.UpdateEarningParams{
 			Referrals:               withdrawalEarning.Referrals,
 			ReferralBalance:         bal.Balance,
@@ -110,10 +131,6 @@ func (m *Model) CompleteWithdrawal(ctx context.Context, arg types.CompleteWithdr
 		return err
 	}
 
-	_, err = m.Model.UpdateWithdrawal(ctx, arg.ID, "successful")
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -131,13 +148,13 @@ func (m *Model) CancelWithdrawal(ctx context.Context, id int) error {
 	earning.ReferralBalance += withdrawal.Amount
 
 	arg := types.UpdateEarningParams{
-		Referrals: earning.Referrals,
-		ReferralBalance: earning.ReferralBalance,
-		ReferralTotalEarning: earning.ReferralTotalEarning,
+		Referrals:               earning.Referrals,
+		ReferralBalance:         earning.ReferralBalance,
+		ReferralTotalEarning:    earning.ReferralTotalEarning,
 		ReferralTotalWithdrawal: earning.ReferralTotalWithdrawal,
-		MediaBalance: earning.MediaBalance,
-		MediaTotalEarning: earning.MediaTotalEarning,
-		MediaTotalWithdrawal: earning.MediaTotalWithdrawal,
+		MediaBalance:            earning.MediaBalance,
+		MediaTotalEarning:       earning.MediaTotalEarning,
+		MediaTotalWithdrawal:    earning.MediaTotalWithdrawal,
 	}
 
 	_, err = m.Model.UpdateEarning(ctx, arg)
