@@ -7,13 +7,15 @@ import (
 
 type Payload struct {
 	Username string
+	Membership string
 	IssuedAt time.Time
 	ExpiredAt time.Time
 }
 
-func NewPayload(username string, duration time.Duration) *Payload {
+func NewPayload(username, membership string, duration time.Duration) *Payload {
 	return &Payload{
 		Username: username,
+		Membership: membership,
 		IssuedAt: time.Now(),
 		ExpiredAt: time.Now().Add(duration),
 	}
