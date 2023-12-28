@@ -27,8 +27,8 @@ func NewPasetoMaker(symmetricKey string) (token.Maker, error) {
 	return paseto, nil
 }
 
-func (p *PasetoMaker) CreateToken(username string, duration time.Duration) (string, error) {
-	payload := token.NewPayload(username, duration)
+func (p *PasetoMaker) CreateToken(username, membership string, duration time.Duration) (string, error) {
+	payload := token.NewPayload(username, membership, duration)
 
 
 	return p.paseto.Encrypt(p.symmetricKey, payload, nil)
