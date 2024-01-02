@@ -73,3 +73,27 @@ func (s *Server) UpdatePassword(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, "Password Updated Successfully")
 }
+
+func (s *Server) UpdateUserMemberShip(ctx *gin.Context) {
+	var req types.MembershipUpdateParams
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorFormat(err.Error()))
+		return
+	}
+
+	payload := ctx.MustGet(AuthorizationPayloadKey).(*token.Payload)
+	if payload.Membership != "admin" {
+		ctx.JSON(http.StatusUnauthorized, errorFormat("unauthorized route"))
+		return
+	}
+
+	req.AccessorUsername = payload.Username
+
+	err := s.Server.UpdateMembership(ctx, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorFormat(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, "Success")
+}
