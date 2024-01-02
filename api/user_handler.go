@@ -51,3 +51,25 @@ func (s *Server) UpdateUserProfile(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, "User Updated Successfully")
 }
+
+func (s *Server) UpdatePassword(ctx *gin.Context) {
+	var req types.UpdatePasswordParams
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorFormat(err.Error()))
+		return
+	}
+
+	payload := ctx.MustGet(AuthorizationPayloadKey).(*token.Payload)
+	if payload.Username != req.Username {
+		ctx.JSON(http.StatusUnauthorized, errorFormat("unauthorized route"))
+		return
+	}
+
+	err := s.Server.UpdateUserPassword(ctx, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorFormat(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, "Password Updated Successfully")
+}
