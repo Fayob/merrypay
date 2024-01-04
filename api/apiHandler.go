@@ -58,9 +58,10 @@ func (s *Server) setupRoute() {
 	app.POST("/withdrawal/init", s.InitiateWithdrawal)
 	app.POST("/withdrawal/complete", s.CompleteWithdrawal)
 	app.GET("/withdrawal/:id", s.GetWithdrawalByID)
+	app.GET("/withdrawal/all/:status", s.GetWithdrawalsByStatus)
 
-	// funds
-
+	// Jackpot
+	app.POST("/jackpot", s.Jackpot)
 	s.router = router
 }
 
