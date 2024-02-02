@@ -94,10 +94,11 @@ type UpdateUserParams struct {
 	LastName   string `json:"last_name" binding:"required"`
 	Email      string `json:"email" binding:"required"`
 	Membership string `json:"membership" binding:"required"`
+	WonJackpot bool   `json:"won_jackpot" binding:"required"`
 }
 
 type MembershipUpdateParams struct {
-	AccessorUsername string `json:"accessor_username" binding:"required"`
+	AccessorUsername string `json:"accessor_username"`
 	AccOwnerUsername string `json:"acc_owner_username" binding:"required"`
 	Membership       string `json:"membership" binding:"required"`
 }
@@ -122,7 +123,7 @@ type UpdateEarningParams struct {
 type WithdrawalParam struct {
 	Kind       string `json:"kind" binding:"required"`
 	Amount     int    `json:"amount" binding:"required"`
-	WithdrawBy string `json:"withdraw_by" binding:"required"`
+	WithdrawBy string `json:"withdraw_by"`
 }
 
 type CompleteWithdrawalParams struct {
@@ -136,4 +137,9 @@ type BankDetailParams struct {
 	AccountName   string `json:"account_name" binding:"required"`
 	AccountNumber string `json:"account_number" binding:"required"`
 	Owner         string `json:"owner"`
+}
+
+type JackpotParam struct {
+	Guess    [5]int `json:"guess" binding:"required"`
+	Username string	`json:"username"`
 }

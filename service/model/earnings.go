@@ -5,13 +5,27 @@ import (
 	"merrypay/types"
 )
 
-func (q *Queries) CreateEarning(ctx context.Context, owner string) error {
-	query := `INSERT INTO earnings(owner) VALUES($1)`
-	_, err := q.db.ExecContext(ctx, query, owner)
-	if err != nil {
-		return err
-	}
-	return nil
+func (q *Queries) CreateEarning(ctx context.Context, owner string) (types.Earning, error) {
+	query := `INSERT INTO earnings(owner) VALUES($1) RETURNING id, referrals, referral_balance, 
+						referral_total_earning, referral_total_withdrawal, media_balance, media_total_earning, 
+						media_total_withdrawal, owner`
+
+	row := q.db.QueryRowContext(ctx, query, owner)
+
+	var earning types.Earning
+	err := row.Scan(
+		&earning.ID,
+		&earning.Referrals,
+		&earning.ReferralBalance,
+		&earning.ReferralTotalEarning,
+		&earning.ReferralTotalWithdrawal,
+		&earning.MediaBalance,
+		&earning.MediaTotalEarning,
+		&earning.MediaTotalWithdrawal,
+		&earning.Owner,
+	)
+
+	return earning, err
 }
 
 func (q *Queries) GetEarning(ctx context.Context, owner string) (types.Earning, error) {
@@ -43,7 +57,7 @@ func (q *Queries) UpdateEarning(ctx context.Context, arg types.UpdateEarningPara
 						media_total_withdrawal, owner`
 
 	row := q.db.QueryRowContext(
-		ctx, query, arg.Owner, arg.Referrals, arg.ReferralBalance, 
+		ctx, query, arg.Owner, arg.Referrals, arg.ReferralBalance,
 		arg.ReferralTotalEarning, arg.ReferralTotalWithdrawal, arg.MediaBalance,
 		arg.MediaTotalEarning, arg.MediaTotalWithdrawal,
 	)

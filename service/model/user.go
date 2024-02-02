@@ -89,10 +89,10 @@ func (q *Queries) FindAllUsers(ctx context.Context) ([]types.User, error) {
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg types.UpdateUserParams) (types.User, error) {
-	query := `UPDATE users SET first_name = $2, last_name = $3, email = $4, membership = $5 where username = $1 
+	query := `UPDATE users SET first_name = $2, last_name = $3, email = $4, membership = $5, won_jackpot = $6 where username = $1 
 						RETURNING username, first_name, last_name, email, membership, won_jackpot, referred_by, created_at`
 
-	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Membership)
+	row := q.db.QueryRowContext(ctx, query, arg.Username, arg.FirstName, arg.LastName, arg.Email, arg.Membership, arg.WonJackpot)
 
 	var updatedUser types.User
 	err := row.Scan(
