@@ -54,3 +54,22 @@ func (s *Server) CompleteWithdrawal(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, "Withdrawal Completed")
 }
+
+func (s *Server) Jackpot(ctx *gin.Context) {
+	var req types.JackpotParam
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorFormat(err.Error()))
+		return
+	}
+
+	payload := ctx.MustGet(AuthorizationPayloadKey).(*token.Payload)
+	req.Username = payload.Username
+
+	result, err := s.Server.Jackpot(ctx, req.Guess, req.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorFormat(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
